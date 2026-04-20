@@ -1,0 +1,30 @@
+ARG UBUNTU_VERSION=22.04
+ARG CUDA_VERSION=12.6.2
+ARG BASE_CUDA_DEV_CONTAINER=nvidia/cuda:${CUDA_VERSION}-devel-ubuntu${UBUNTU_VERSION}
+ARG BASE_CUDA_RUN_CONTAINER=nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION}
+
+# --- Stage 1: Build ---
+FROM ${BASE_CUDA_DEV_CONTAINER} AS builder
+
+RUN apt-get update && apt-get install -y build-essential git cmake
+
+WORKDIR /app
+RUN git clone https://github.com/ggerganov/whisper.cpp.git .
+
+# Kompilieren mit CUDA Support für Jetson (Arch 87)
+RUN cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=87
+RUN cmake --build build --config Release --target whisper-server -- -j2
+
+# --- Stage 2: Runtime ---
+FROM ${BASE_CUDA_RUN_CONTAINER}
+
+RUN apt-get update && apt-get install -y libgomp1 curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+# Kopiere das whisper-server binary
+COPY --from=builder /app/build/bin/whisper-server /usr/local/bin/whisper-server
+
+# Whisper benötigt oft Modelle im speziellen Format (.bin)
+ENTRYPOINT ["whisper-server"]
+CMD ["-m", "/models/ggml-base.bin", "--host", "0.0.0.0", "--port", "8082"]

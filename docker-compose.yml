@@ -1,0 +1,59 @@
+services:
+  # 1. Thinking Modell (DeepSeek R1 Distill 1.5B)
+  thinking-llm:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.llama
+      target: server
+    container_name: thinking-llm
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    volumes:
+      - ./models:/models
+    command: ["-m", "/models/deepseek-r1-distill-qwen-1.5b-q4_k_m.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "99", "-c", "4096"]
+
+  # 2. Non-Thinking Modell (Qwen 2.5 1.5B)
+  non-thinking-llm:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.llama
+      target: server
+    container_name: non-thinking-llm
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    volumes:
+      - ./models:/models
+    command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048"]
+
+  # 3. Whisper.cpp (Audio-zu-Text)
+  whisper:
+    build:
+      context: .
+      dockerfile: build/Dockerfile.whisper
+    container_name: whisper-api
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    volumes:
+      - ./models:/models
+    command: ["-m", "/models/ggml-base-q5_1.bin", "--port", "8082", "--host", "0.0.0.0"]
+
+  # 4. Deine Haupt-Software
+  my-app:
+    build: project/
+    container_name: liva-app
+    depends_on:
+      - thinking-llm
+      - non-thinking-llm
+      - whisper
+    environment:
+      - THINKING_URL=http://thinking-llm:8080
+      - NON_THINKING_URL=http://non-thinking-llm:8081
+      - WHISPER_URL=http://whisper:8082
+    ports:
+      - "5000:5000"

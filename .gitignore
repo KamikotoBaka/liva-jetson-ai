@@ -1,0 +1,6 @@
+models/
+models-whisper/
+__pycache__/
+*.gguf
+*.bin
+.env
