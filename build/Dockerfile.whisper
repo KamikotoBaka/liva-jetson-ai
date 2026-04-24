@@ -6,14 +6,19 @@ ARG BASE_CUDA_RUN_CONTAINER=nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_V
 # --- Stage 1: Build ---
 FROM ${BASE_CUDA_DEV_CONTAINER} AS builder
 
-RUN apt-get update && apt-get install -y build-essential git cmake
+RUN apt-get update && apt-get install -y build-essential git cmake ca-certificates
 
 WORKDIR /app
-RUN git clone https://github.com/ggerganov/whisper.cpp.git .
+RUN git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git .
 
 # Kompilieren mit CUDA Support für Jetson (Arch 87)
-RUN cmake -B build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=87
-RUN cmake --build build --config Release --target whisper-server -- -j2
+RUN cmake -B build \
+    -DGGML_CUDA=ON \
+    -DWHISPER_BUILD_SERVER=ON \
+    -DCMAKE_CUDA_ARCHITECTURES=87
+RUN cmake --build build --config Release --target whisper-server -- -j2 \
+    || cmake --build build --config Release --target server -- -j2 \
+    || cmake --build build --config Release -- -j2
 
 # --- Stage 2: Runtime ---
 FROM ${BASE_CUDA_RUN_CONTAINER}
@@ -22,8 +27,18 @@ RUN apt-get update && apt-get install -y libgomp1 curl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-# Kopiere das whisper-server binary
-COPY --from=builder /app/build/bin/whisper-server /usr/local/bin/whisper-server
+# Kopiere alle erzeugten Binaries und verlinke den passenden Server-Binary-Namen.
+COPY --from=builder /app/build/bin/ /opt/whisper-bin/
+RUN set -eux; \
+        if [ -x /opt/whisper-bin/whisper-server ]; then \
+            ln -s /opt/whisper-bin/whisper-server /usr/local/bin/whisper-server; \
+        elif [ -x /opt/whisper-bin/server ]; then \
+            ln -s /opt/whisper-bin/server /usr/local/bin/whisper-server; \
+        else \
+            echo "No whisper server binary found in /opt/whisper-bin"; \
+            ls -la /opt/whisper-bin; \
+            exit 1; \
+        fi
 
 # Whisper benötigt oft Modelle im speziellen Format (.bin)
 ENTRYPOINT ["whisper-server"]
