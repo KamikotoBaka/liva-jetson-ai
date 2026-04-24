@@ -15,12 +15,21 @@ RUN git clone --depth 1 --recurse-submodules https://github.com/ggerganov/whispe
 RUN cmake -B build \
     -DGGML_CUDA=ON \
     -DWHISPER_BUILD_SERVER=ON \
-    -DWHISPER_BUILD_EXAMPLES=ON \
+    -DWHISPER_BUILD_EXAMPLES=OFF \
     -DWHISPER_BUILD_TESTS=OFF \
+    -DCMAKE_EXE_LINKER_FLAGS=-Wl,--allow-shlib-undefined \
     -DCMAKE_CUDA_ARCHITECTURES=87
-RUN cmake --build build --config Release --target whisper-server -- -j1 \
-    || cmake --build build --config Release --target server -- -j1 \
-    || cmake --build build --config Release -- -j1
+RUN set -eux; \
+    cmake --build build --target help > /tmp/cmake-targets.txt; \
+    if grep -Eq '(^| )whisper-server($| )' /tmp/cmake-targets.txt; then \
+        cmake --build build --config Release --target whisper-server -- -j1; \
+    elif grep -Eq '(^| )server($| )' /tmp/cmake-targets.txt; then \
+        cmake --build build --config Release --target server -- -j1; \
+    else \
+        echo "No server build target found. Available targets:"; \
+        cat /tmp/cmake-targets.txt; \
+        exit 1; \
+    fi
 
 # --- Stage 2: Runtime ---
 FROM ${BASE_CUDA_RUN_CONTAINER}
