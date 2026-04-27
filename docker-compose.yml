@@ -6,10 +6,10 @@ services:
       dockerfile: build/Dockerfile.llama
       target: server
     container_name: thinking-llm
-    deploy:
-      resources:
-        reservations:
-          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
     command: ["-m", "/models/deepseek-r1-distill-qwen-1.5b-q4_k_m.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "99", "-c", "4096"]
@@ -21,10 +21,10 @@ services:
       dockerfile: build/Dockerfile.llama
       target: server
     container_name: non-thinking-llm
-    deploy:
-      resources:
-        reservations:
-          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
     command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048"]
@@ -35,10 +35,10 @@ services:
       context: .
       dockerfile: build/Dockerfile.whisper
     container_name: whisper-api
-    deploy:
-      resources:
-        reservations:
-          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
     command: ["-m", "/models/ggml-base-q5_1.bin", "--port", "8082", "--host", "0.0.0.0"]
