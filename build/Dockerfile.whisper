@@ -40,6 +40,9 @@ RUN apt-get update && apt-get install -y libgomp1 curl && \
 WORKDIR /app
 # Kopiere den gesamten Build-Ordner und verlinke den passenden Server-Binary-Namen.
 COPY --from=builder /app/build/ /opt/whisper-build/
+COPY --from=builder /app/build/src/ /opt/whisper-libs/src/
+COPY --from=builder /app/build/ggml/src/ /opt/whisper-libs/ggml/
+ENV LD_LIBRARY_PATH=/opt/whisper-libs/src:/opt/whisper-libs/ggml:${LD_LIBRARY_PATH}
 RUN set -eux; \
         if [ -x /opt/whisper-build/bin/whisper-server ]; then \
             ln -s /opt/whisper-build/bin/whisper-server /usr/local/bin/whisper-server; \
