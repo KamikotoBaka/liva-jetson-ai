@@ -41,7 +41,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
-    command: ["-m", "/models/ggml-base-q5_1.bin", "--port", "8082", "--host", "0.0.0.0"]
+    command: ["-m", "/models/ggml-base.bin", "--port", "8082", "--host", "0.0.0.0"]
 
   # 4. Deine Haupt-Software
   my-app:
