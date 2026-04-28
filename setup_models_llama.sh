@@ -20,16 +20,26 @@ if [ ! -f "$THINKING_PATH" ]; then
     echo "[1/2] Downloading thinking model (Deepseek R1 Distill 1.5B)..."
     echo "      This is a ~1.2GB file, may take 5-10 minutes on typical internet"
     
-    if command -v huggingface-hub &> /dev/null || python3 -c "import huggingface_hub" 2>/dev/null; then
-        echo "      Using huggingface-hub CLI..."
+    # Try huggingface-cli if available
+    if command -v huggingface-cli &> /dev/null; then
+        echo "      Using huggingface-cli..."
         huggingface-cli download "$THINKING_REPO" "$THINKING_MODEL" --local-dir "$MODELS_DIR" --local-dir-use-symlinks False
+        if [ $? -eq 0 ]; then
+            echo "      ✓ Thinking model downloaded"
+        else
+            echo "      ⚠ huggingface-cli download failed, trying wget..."
+            cd "$MODELS_DIR"
+            wget --show-progress "https://huggingface.co/$THINKING_REPO/resolve/main/$THINKING_MODEL" -O "$THINKING_MODEL"
+            cd - > /dev/null
+        fi
     else
-        echo "      Using wget (huggingface-hub not available)..."
+        echo "      Using wget..."
+        mkdir -p "$MODELS_DIR"
         cd "$MODELS_DIR"
-        wget -q --show-progress "https://huggingface.co/$THINKING_REPO/resolve/main/$THINKING_MODEL" -O "$THINKING_MODEL"
+        wget --show-progress "https://huggingface.co/$THINKING_REPO/resolve/main/$THINKING_MODEL" -O "$THINKING_MODEL"
         cd - > /dev/null
+        echo "      ✓ Thinking model downloaded"
     fi
-    echo "      ✓ Thinking model downloaded"
 else
     echo "[1/2] Thinking model already exists: $THINKING_PATH"
 fi
@@ -45,16 +55,26 @@ if [ ! -f "$NON_THINKING_PATH" ]; then
     echo "[2/2] Downloading non-thinking model (Qwen 2.5 Instruct 1.5B)..."
     echo "      This is a ~1.0GB file, may take 5-10 minutes on typical internet"
     
-    if command -v huggingface-hub &> /dev/null || python3 -c "import huggingface_hub" 2>/dev/null; then
-        echo "      Using huggingface-hub CLI..."
+    # Try huggingface-cli if available
+    if command -v huggingface-cli &> /dev/null; then
+        echo "      Using huggingface-cli..."
         huggingface-cli download "$NON_THINKING_REPO" "$NON_THINKING_MODEL" --local-dir "$MODELS_DIR" --local-dir-use-symlinks False
+        if [ $? -eq 0 ]; then
+            echo "      ✓ Non-thinking model downloaded"
+        else
+            echo "      ⚠ huggingface-cli download failed, trying wget..."
+            cd "$MODELS_DIR"
+            wget --show-progress "https://huggingface.co/$NON_THINKING_REPO/resolve/main/$NON_THINKING_MODEL" -O "$NON_THINKING_MODEL"
+            cd - > /dev/null
+        fi
     else
-        echo "      Using wget (huggingface-hub not available)..."
+        echo "      Using wget..."
+        mkdir -p "$MODELS_DIR"
         cd "$MODELS_DIR"
-        wget -q --show-progress "https://huggingface.co/$NON_THINKING_REPO/resolve/main/$NON_THINKING_MODEL" -O "$NON_THINKING_MODEL"
+        wget --show-progress "https://huggingface.co/$NON_THINKING_REPO/resolve/main/$NON_THINKING_MODEL" -O "$NON_THINKING_MODEL"
         cd - > /dev/null
+        echo "      ✓ Non-thinking model downloaded"
     fi
-    echo "      ✓ Non-thinking model downloaded"
 else
     echo "[2/2] Non-thinking model already exists: $NON_THINKING_PATH"
 fi
