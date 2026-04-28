@@ -30,8 +30,24 @@ FROM ${BASE_CUDA_RUN_CONTAINER} AS server
 RUN apt-get update && apt-get install -y libgomp1 curl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Kopiere nur das fertige Binary aus dem Build-Stage
-COPY --from=build /app/build/bin/llama-server /app/llama-server
+# Kopiere den gesamten Build-Ordner und mache die Laufzeitbibliotheken verfügbar.
+COPY --from=build /app/build/ /opt/llama-build/
+RUN set -eux; \
+        find /opt/llama-build -type f -name '*.so*' -exec cp -a {} /usr/local/lib/ \;; \
+        ldconfig; \
+        if [ -x /opt/llama-build/bin/llama-server ]; then \
+            ln -s /opt/llama-build/bin/llama-server /usr/local/bin/llama-server; \
+        elif [ -x /opt/llama-build/bin/server ]; then \
+            ln -s /opt/llama-build/bin/server /usr/local/bin/llama-server; \
+        elif [ -x /opt/llama-build/examples/server/llama-server ]; then \
+            ln -s /opt/llama-build/examples/server/llama-server /usr/local/bin/llama-server; \
+        elif [ -x /opt/llama-build/examples/server/server ]; then \
+            ln -s /opt/llama-build/examples/server/server /usr/local/bin/llama-server; \
+        else \
+            echo "No llama server binary found in /opt/llama-build"; \
+            find /opt/llama-build -maxdepth 4 -type f -perm /111 -print; \
+            exit 1; \
+        fi
 
 WORKDIR /app
 ENV LLAMA_ARG_HOST=0.0.0.0
@@ -39,6 +55,6 @@ ENV LLAMA_ARG_HOST=0.0.0.0
 # Standard-Healthcheck
 HEALTHCHECK CMD [ "curl", "-f", "http://localhost:8080/health" ]
 
-ENTRYPOINT [ "/app/llama-server" ]
+ENTRYPOINT [ "/usr/local/bin/llama-server" ]
 # Standard-Parameter (werden durch docker-compose command überschrieben)
 CMD [ "-m", "/models/model.gguf", "--host", "0.0.0.0", "--port", "8080", "-ngl", "99" ]
