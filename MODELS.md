@@ -112,7 +112,13 @@ pip install huggingface-hub
 If not installed, scripts fall back to `wget` (slower but works).
 
 ## Troubleshooting
-
+### ZRam deaktivieren (WICHTIG):
+- sudo systemctl disable nvzramconfig
+- sudo reboot
+### Gnome Desktop ausschalten (Headless Mode):
+- sudo systemctl set-default multi-user.target
+- sudo reboot
+# (Um ihn später wieder einzuschalten: sudo systemctl set-default graphical.target)
 ### Models not found in Docker
 - Verify files exist: `ls -lh ./models/`
 - Ensure `docker-compose.yml` has `volumes: - ./models:/models` for all services

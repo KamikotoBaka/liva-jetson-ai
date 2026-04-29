@@ -12,7 +12,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
-    command: ["-m", "/models/deepseek-r1-distill-qwen-1.5b-q4_k_m.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "99", "-c", "4096"]
+    command: ["-m", "/models/deepseek-r1-distill-qwen-1.5b-q4_k_m.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048", "--threads", "4"]
 
   # 2. Non-Thinking Modell (Qwen 2.5 1.5B)
   non-thinking-llm:
@@ -27,7 +27,7 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
-    command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048"]
+    command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048", "--threads", "4"]
 
   # 3. Whisper.cpp (Audio-zu-Text)
   whisper:
