@@ -17,7 +17,7 @@ from threading import Thread
 from uuid import uuid4
 import shutil
 import tempfile
-
+import subprocess
 from dispatcher import CommandDispatcher
 from ai_router import AIRouter
 from custom_commands_store import load_custom_commands
@@ -213,7 +213,27 @@ def _build_process_response(stt_text: str) -> ProcessResponse:
 		errorEventId=(dispatch_result.get("error_event") or {}).get("id"),
 		errorTimestamp=(dispatch_result.get("error_event") or {}).get("timestamp"),
 	)
-
+def _convert_audio_to_wav(input_path: str) -> str:
+    """Convert any audio format to 16 kHz mono WAV using ffmpeg."""
+    output_path = input_path.rsplit(".", 1)[0] + "_converted.wav"
+    try:
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i", input_path,
+                "-ac", "1",
+                "-ar", "16000",
+                "-c:a", "pcm_s16le",
+                output_path,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return output_path
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        raise RuntimeError("Audio conversion failed. Ensure ffmpeg is installed.")
 
 def _run_parallel_audio_tasks(audio_path: str) -> tuple[str, dict]:
 	with ThreadPoolExecutor(max_workers=2) as pool:
@@ -299,13 +319,14 @@ def chat_turn(request: ChatTurnRequest) -> ChatTurnResponse:
 async def process_audio_command(audio: UploadFile = File(...)) -> ProcessResponse:
 	suffix = Path(audio.filename or "command.webm").suffix or ".webm"
 	temp_path: str | None = None
-
+	wav_path: str | None = None
 	try:
 		with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 			shutil.copyfileobj(audio.file, temp_file)
 			temp_path = temp_file.name
-
-		stt_text = stt.transcribe_audio(temp_path)
+			
+		wav_path = _convert_audio_to_wav(temp_path)
+		stt_text = stt.transcribe_audio(wav_path)
 		if not stt_text:
 			raise HTTPException(status_code=400, detail="No speech detected in audio")
 
@@ -320,19 +341,21 @@ async def process_audio_command(audio: UploadFile = File(...)) -> ProcessRespons
 		await audio.close()
 		if temp_path:
 			Path(temp_path).unlink(missing_ok=True)
+		if wav_path:
+			Path(wav_path).unlink(missing_ok=True)
 
 
 @app.post("/api/process-audio-secure", response_model=SecureProcessResponse)
 async def process_audio_command_secure(audio: UploadFile = File(...)) -> SecureProcessResponse:
 	suffix = Path(audio.filename or "command.webm").suffix or ".webm"
 	temp_path: str | None = None
-
+	wav_path: str | None = None
 	try:
 		with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 			shutil.copyfileobj(audio.file, temp_file)
 			temp_path = temp_file.name
-
-		stt_text, speaker = _run_parallel_audio_tasks(temp_path)
+		wav_path = _convert_audio_to_wav(temp_path)
+		stt_text, speaker = _run_parallel_audio_tasks(wav_path)
 		if not stt_text:
 			raise HTTPException(status_code=400, detail="No speech detected in audio")
 
@@ -377,6 +400,8 @@ async def process_audio_command_secure(audio: UploadFile = File(...)) -> SecureP
 		await audio.close()
 		if temp_path:
 			Path(temp_path).unlink(missing_ok=True)
+		if wav_path:
+			Path(wav_path).unlink(missing_ok=True)
 
 
 @app.post("/api/process-audio-session", response_model=SecureProcessResponse)
@@ -390,13 +415,14 @@ async def process_audio_command_with_session(
 
 	suffix = Path(audio.filename or "command.webm").suffix or ".webm"
 	temp_path: str | None = None
-
+	wav_path: str | None = None
 	try:
 		with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 			shutil.copyfileobj(audio.file, temp_file)
 			temp_path = temp_file.name
 
-		stt_text = stt.transcribe_audio(temp_path)
+		wav_path = _convert_audio_to_wav(temp_path)
+		stt_text = stt.transcribe_audio(wav_path)
 		if not stt_text:
 			raise HTTPException(status_code=400, detail="No speech detected in audio")
 
@@ -438,19 +464,22 @@ async def process_audio_command_with_session(
 		await audio.close()
 		if temp_path:
 			Path(temp_path).unlink(missing_ok=True)
+		if wav_path:
+			Path(wav_path).unlink(missing_ok=True)
 
 
 @app.post("/api/auth-voice", response_model=VoiceAuthResponse)
 async def auth_voice(audio: UploadFile = File(...)) -> VoiceAuthResponse:
 	suffix = Path(audio.filename or "auth.webm").suffix or ".webm"
 	temp_path: str | None = None
+	wav_path: str | None = None
 
 	try:
 		with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 			shutil.copyfileobj(audio.file, temp_file)
 			temp_path = temp_file.name
-
-		speaker = identify_speaker_from_file(temp_path)
+		wav_path = _convert_audio_to_wav(temp_path)
+		speaker = identify_speaker_from_file(wav_path)
 		if speaker.get("role") == "guest":
 			return VoiceAuthResponse(
 				speakerName=speaker.get("name", "Unknown"),
@@ -478,7 +507,8 @@ async def auth_voice(audio: UploadFile = File(...)) -> VoiceAuthResponse:
 		await audio.close()
 		if temp_path:
 			Path(temp_path).unlink(missing_ok=True)
-
+		if wav_path:
+			Path(wav_path).unlink(missing_ok=True)
 
 @app.post("/api/process-secure-text", response_model=SecureProcessResponse)
 def process_secure_text(request: SecureTextProcessRequest) -> SecureProcessResponse:
