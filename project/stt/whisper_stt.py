@@ -114,11 +114,31 @@ class WhisperCppSTT:
 		try:
 			with urllib_request.urlopen(req, timeout=45) as response:
 				body = response.read().decode("utf-8", errors="ignore")
+			text = self._extract_transcript(body)
+			if text:
+				return text.strip()
 		except (urllib_error.URLError, TimeoutError, ValueError):
-			return None
+			# Multipart attempt failed — fall through to possible raw attempt.
+			body = ""
 
-		text = self._extract_transcript(body)
-		return text.strip() if text else None
+		# Fallback: some whisper servers expect raw WAV bytes (no multipart)
+		if endpoint == "/inference":
+			try:
+				req2 = urllib_request.Request(
+					url=f"{self.base_url}{endpoint}",
+					data=audio_bytes,
+					headers={"Content-Type": "audio/wav"},
+					method="POST",
+				)
+				with urllib_request.urlopen(req2, timeout=45) as response:
+					body2 = response.read().decode("utf-8", errors="ignore")
+					text2 = self._extract_transcript(body2)
+					if text2:
+						return text2.strip()
+			except (urllib_error.URLError, TimeoutError, ValueError):
+				return None
+
+		return None
 
 	def _extract_transcript(self, body: str) -> str | None:
 		cleaned = body.strip()
