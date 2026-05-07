@@ -196,3 +196,23 @@ To use different models:
 - [build/Dockerfile.llama](./build/Dockerfile.llama) - Llama.cpp build
 - [build/Dockerfile.whisper](./build/Dockerfile.whisper) - Whisper.cpp build
 - [project/main.py](./project/main.py) - FastAPI routes
+
+
+## Huggingface
+# In dein Projektverzeichnis gehen
+cd liva-jetson-ai
+
+# Alte Umgebung löschen
+rm -rf .venv
+
+# Neue Umgebung erstellen (jetzt sollte pip automatisch dabei sein)
+python3 -m venv .venv
+
+# Aktivieren
+source .venv/bin/activate
+
+# Prüfen, ob pip da ist
+pip --version
+# install
+pip install --upgrade pip
+pip install "huggingface_hub[cli]"
