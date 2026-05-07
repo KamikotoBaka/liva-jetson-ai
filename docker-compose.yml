@@ -12,7 +12,8 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
-    command: ["-m", "/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048", "--threads", "4"]
+    # Keep thinking model mostly on CPU to preserve GPU memory for other services.
+    command: ["-m", "/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf", "--port", "8080", "--host", "0.0.0.0", "-ngl", "0", "-c", "1536", "--threads", "4", "-b", "128", "-ub", "32", "-fa", "off"]
 
   # 2. Non-Thinking Modell (Qwen 2.5 1.5B)
   non-thinking-llm:
@@ -27,7 +28,8 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
       - ./models:/models
-    command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "99", "-c", "2048", "--threads", "4"]
+    # Minimal GPU offload to keep latency acceptable without exhausting VRAM.
+    command: ["-m", "/models/qwen2.5-1.5b-instruct-q4_k_m.gguf", "--port", "8081", "--host", "0.0.0.0", "-ngl", "2", "-c", "1536", "--threads", "4", "-b", "128", "-ub", "32", "-fa", "off"]
 
   # 3. Whisper.cpp (Audio-zu-Text)
   whisper:
@@ -35,13 +37,10 @@ services:
       context: .
       dockerfile: build/Dockerfile.whisper
     container_name: whisper-api
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    # Run Whisper on CPU to avoid CUDA allocation failures while LLMs occupy GPU VRAM.
     volumes:
       - ./models:/models
-    command: ["-m", "/models/ggml-base.bin", "--port", "8082", "--host", "0.0.0.0"]
+    command: ["-m", "/models/ggml-base.bin", "--port", "8082", "--host", "0.0.0.0", "--threads", "4"]
 
   # 4. Deine Haupt-Software
   my-app:
