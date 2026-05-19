@@ -15,7 +15,7 @@ def publish_workpiece_order(workpiece_type: str) -> dict:
     if normalized_type not in ALLOWED_WORKPIECE_TYPES:
         raise RuntimeError(f"Unsupported workpiece type: {workpiece_type}")
 
-    host = os.getenv("FISCHER_MQTT_HOST", "localhost")
+    host = os.getenv("FISCHER_MQTT_HOST", "127.0.0.1")
     port = int(os.getenv("FISCHER_MQTT_ORDER_PORT", "18830"))
     topic = os.getenv("FISCHER_MQTT_ORDER_TOPIC", "f/o/order")
 

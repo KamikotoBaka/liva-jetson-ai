@@ -10,7 +10,7 @@ import paho.mqtt.client as mqtt
 
 class HighBayStockService:
     def __init__(self) -> None:
-        self.host = os.getenv("FISCHER_MQTT_HOST", "localhost")
+        self.host = os.getenv("FISCHER_MQTT_HOST", "127.0.0.1")
         self.port = int(os.getenv("FISCHER_MQTT_PORT", "18830"))
         self.topic = os.getenv("FISCHER_MQTT_STOCK_TOPIC", "f/i/stock")
 
