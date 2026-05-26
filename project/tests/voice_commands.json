@@ -1,0 +1,10 @@
+[
+  {
+    "id": "factory_check_warehouse",
+    "audio": "tests/audio/factory_check_warehouse.wav",
+    "transcript": "Check the warehouse",
+    "expected_intent": "Check the warehouse",
+    "category": "factory",
+    "notes": "Good command for MQTT routing"
+  }
+]
