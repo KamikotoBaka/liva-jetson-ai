@@ -51,10 +51,14 @@ services:
       - thinking-llm
       - non-thinking-llm
       - whisper
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - THINKING_URL=http://thinking-llm:8080
       - NON_THINKING_URL=http://non-thinking-llm:8081
       - WHISPER_URL=http://whisper:8082
+      - FISCHER_MQTT_HOST=host.docker.internal
+      - FISCHER_MQTT_PORT=18830
     ports:
       - "5000:5000"
     networks:
