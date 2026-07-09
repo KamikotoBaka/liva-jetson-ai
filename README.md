@@ -41,11 +41,11 @@ Liva processes voice commands sequentially through a structured pipeline:
 │   └── tests/              # Benchmark manifests and audio evaluation samples
 └── docker-compose.yml      # Multi-container Docker deployment configuration
 
-## 🛠️ Target Hardware: Jetson Orin Nano
+🛠️ Target Hardware: Jetson Orin Nano
 This specific branch is finely tuned for the NVIDIA Jetson Orin Nano (8 GB VRAM).
 It utilizes hardware-accelerated local model execution and shared memory optimizations to achieve low-latency processing without relying on cloud computation.
 
-## 🏁 Getting Started
+🏁 Getting Started
 Prerequisites
 Ensure your Jetson is running NVIDIA Jetpack with the NVIDIA Container Toolkit installed. 
 For a detailed guide on setting up the environment, see project/docs/JETSON_SETUP.md.
@@ -62,7 +62,7 @@ docker compose up --build -d
 
 Access the FastAPI documentation and frontend via your browser to configure your specific models and smart home devices.
 
-## 🎛️ Custom Commands & Automations
+🎛️ Custom Commands & Automations
 You can easily define custom voice triggers by editing project/data/custom_commands.json.
 
 Example configurations include:
@@ -75,7 +75,7 @@ Publishing state changes to MQTT topics.
 
 Triggering local device shell scripts.
 
-## 🔌 Extending the System (Adding Adapters)
+🔌 Extending the System (Adding Adapters)
 To add a new smart home device or service integration:
 
 Create a new Python module inside project/adapters/.
