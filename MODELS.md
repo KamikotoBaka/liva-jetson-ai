@@ -216,3 +216,15 @@ pip --version
 # install
 pip install --upgrade pip
 pip install "huggingface_hub[cli]"
+
+benchmark_summary_nano_20260527T122223Z.csv
+hardware,mode,whisper_model,llm_model,command_id,runs,avg_latency_ms,p95_latency_ms,min_latency_ms,max_latency_ms,avg_cpu_pct,peak_cpu_pct,avg_ram_pct,peak_ram_pct,peak_ram_used_mb,avg_gpu_pct,peak_gpu_pct,peak_gpu_used_mb,error_count
+nano,audio,unknown,unknown,factory_check_warehouse,3,1447.87,1454.11,1442.38,1454.98,,,,,,,,,0
+
+
+
+cat benchmark_raw_nano_20260527T122223Z.csv
+timestamp_utc,hardware,host,os,python,mode,endpoint,base_url,whisper_model,llm_model,command_id,run_index,input_value,audio_file,expected_intent,status_code,latency_ms,cpu_avg_pct,cpu_peak_pct,ram_avg_pct,ram_peak_pct,ram_peak_used_mb,gpu_avg_pct,gpu_peak_pct,gpu_peak_used_mb,response_intent,response_route,response_command_text,response_tts_text,server_dispatch_ms,server_tts_ms,server_total_ms,server_dispatch_offset_ms,error
+2026-05-27T12:22:20.596934+00:00,nano,nano,Linux-5.15.148-tegra-aarch64-with-glibc2.35,3.10.12,audio,/api/process-audio,http://127.0.0.1:5000,unknown,unknown,factory_check_warehouse,1,factory_check_warehouse.wav,factory_check_warehouse.wav,Check the warehouse,200,1454.98,,,,,,,,,custom_command,,REST: GET /api/factory/highbay-stock,"High-bay has 3 of 9 slots occupied. Free: 6. Occupied locations: A1, B1, C1",,,,,
+2026-05-27T12:22:22.042174+00:00,nano,nano,Linux-5.15.148-tegra-aarch64-with-glibc2.35,3.10.12,audio,/api/process-audio,http://127.0.0.1:5000,unknown,unknown,factory_check_warehouse,2,factory_check_warehouse.wav,factory_check_warehouse.wav,Check the warehouse,200,1442.38,,,,,,,,,custom_command,,REST: GET /api/factory/highbay-stock,"High-bay has 3 of 9 slots occupied. Free: 6. Occupied locations: A1, B1, C1",,,,,
+2026-05-27T12:22:23.489351+00:00,nano,nano,Linux-5.15.148-tegra-aarch64-with-glibc2.35,3.10.12,audio,/api/process-audio,http://127.0.0.1:5000,unknown,unknown,factory_check_warehouse,3,factory_check_warehouse.wav,factory_check_warehouse.wav,Check the warehouse,200,1446.24,,,,,,,,,custom_command,,REST: GET /api/factory/highbay-stock,"High-bay has 3 of 9 slots occupied. Free: 6. Occupied locations: A1, B1, C1",,,,,

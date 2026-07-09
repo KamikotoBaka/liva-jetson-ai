@@ -84,4 +84,8 @@ Implement your connection logic (e.g., webhooks, custom protocols).
 
 Register the new adapter inside project/dispatcher.py.
 
+<<<<<<< HEAD
 Created with 💻 and ☕ by Daniil Agarkov.
+=======
+Created with 💻 and ☕ by Daniil Agarkov.
+>>>>>>> f3e9bdc (Added Doc's)

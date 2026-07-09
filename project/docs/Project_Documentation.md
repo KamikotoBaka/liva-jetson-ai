@@ -432,17 +432,3 @@ Shell-command flow (new):
 These folders should not be treated as source code documentation targets.
 
 ---
-
-## 7) Recommended Next Documentation Improvements
-
-1. Add `docs/API.md` with explicit request/response examples for:
-   - `GET /health`
-   - `POST /api/process`
-
-2. Add `docs/DEV_SETUP.md` with:
-   - Python environment setup
-   - backend start commands
-   - frontend start commands
-   - microphone browser support notes
-
-3. Replace `vite-project/README.md` template content with project-specific instructions.
